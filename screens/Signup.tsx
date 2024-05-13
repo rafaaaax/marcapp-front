@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import Button from '../components/Button';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface Props {
     navigation: any;
@@ -11,21 +12,18 @@ interface Props {
 
 const Signup = ({ navigation }: Props) => {
     const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
-    const [name, setName] = useState<string>('');
-    const [lastName, setLastName] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
-    const [phone, setPhone] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [day, setDay] = useState<string>('');
-    const [month, setMonth] = useState<string>('');
-    const [year, setYear] = useState<string>('');
+    const [name, setName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [role, setRole] = useState<'Trabajador' | 'Administrador'>();
+    const [birthday, setBirthday] = useState<Date | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [messageColor, setMessageColor] = useState('black');
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const validateName = (text: string) => {
-        const regex = /^[a-zA-Z\s]*$/;
-        return regex.test(text) && text.trim().length > 0;
-    };
-
-    const validateLastName = (text: string) => {
         const regex = /^[a-zA-Z\s]*$/;
         return regex.test(text) && text.trim().length > 0;
     };
@@ -39,38 +37,83 @@ const Signup = ({ navigation }: Props) => {
         return text.trim().length >= 6;
     };
 
-    const handleRegister = () => {
+    const handleDateOfBirthPress = () => {
+        setShowDatePicker(true);
+    };
+
+    const handleDateChange = (event, selectedDate) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            // Establecer la hora actual
+            const currentHour = new Date().getHours();
+            const currentMinute = new Date().getMinutes();
+            const newBirthday = new Date(selectedDate);
+            newBirthday.setHours(currentHour);
+            newBirthday.setMinutes(currentMinute);
+            setBirthday(newBirthday);
+        }
+    };
+
+    const handleRegister = async () => {
         if (!validateName(name)) {
             Alert.alert('Error', 'Ingrese un nombre válido');
             return;
         }
-        if (!validateLastName(lastName)) {
-          
+        if (!validateName(lastName)) {
             Alert.alert('Error', 'Ingrese un apellido válido');
             return;
         }
         if (!validateEmail(email)) {
-          
             Alert.alert('Error', 'Ingrese un correo electrónico válido');
             return;
         }
         if (!validatePassword(password)) {
-          
             Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
             return;
         }
-        if (phone.length !== 12) {
-        
-            Alert.alert('Error', 'El número de teléfono debe tener 8 dígitos');
+        if (!role) {
+            Alert.alert('Error', 'Seleccione un rol (Trabajador o Administrador)');
             return;
         }
-        // Construir la fecha de nacimiento
-        const birthdayString = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-        const birthdayDate = new Date(birthdayString);
-    
-        Alert.alert('Registro Exitoso', '¡Tus datos han sido registrados con éxito!');
+        if (!birthday) {
+            Alert.alert('Error', 'Seleccione su fecha de nacimiento');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const registerReq = await fetch(`http://10.115.75.137:3000/user`, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    firstName: name,
+                    lastName: lastName,
+                    email: email,
+                    password: password,
+                    birthday: birthday?.toISOString().split('T')[0], // Formato yyyy-mm-dd
+                    isAdmin: role,
+                })
+            });
+
+            if (registerReq.status === 201) {
+                setMessage('');
+                navigation.navigate('Login');
+            } else {
+                const data = await registerReq.json();
+                setMessageColor('red');
+                setMessage(data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setMessageColor('red');
+            setMessage('Error de servidor');
+        } finally {
+            setLoading(false);
+        }
     };
-    
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
@@ -81,7 +124,6 @@ const Signup = ({ navigation }: Props) => {
                     </Text>
                     <Text style={{ fontSize: 16, color: COLORS.black }}>Ingresa tus datos personales</Text>
                 </View>
-
                 <View style={{ marginBottom: 12 }}>
                     <Text>Nombre</Text>
                     <TextInput
@@ -92,7 +134,6 @@ const Signup = ({ navigation }: Props) => {
                         style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
                     />
                 </View>
-
                 <View style={{ marginBottom: 12 }}>
                     <Text>Apellido</Text>
                     <TextInput
@@ -103,46 +144,6 @@ const Signup = ({ navigation }: Props) => {
                         style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
                     />
                 </View>
-                 
-                <View style={{ flexDirection: 'row', marginBottom: 12 }}>
-                    <View style={{ flex: 1, marginRight: 5 }}>
-                        <Text>Día</Text>
-                        <TextInput
-                            placeholder='dd'
-                            placeholderTextColor={COLORS.black}
-                            value={day}
-                            onChangeText={setDay}
-                            keyboardType='numeric'
-                            maxLength={2}
-                            style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
-                        />
-                    </View>
-                    <View style={{ flex: 1, marginRight: 5 }}>
-                        <Text>Mes</Text>
-                        <TextInput
-                            placeholder='mm'
-                            placeholderTextColor={COLORS.black}
-                            value={month}
-                            onChangeText={setMonth}
-                            keyboardType='numeric'
-                            maxLength={2}
-                            style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
-                        />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text>Año</Text>
-                        <TextInput
-                            placeholder='yyyy'
-                            placeholderTextColor={COLORS.black}
-                            value={year}
-                            onChangeText={setYear}
-                            keyboardType='numeric'
-                            maxLength={4}
-                            style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
-                        />
-                    </View>
-                </View>
-
                 <View style={{ marginBottom: 12 }}>
                     <Text>Email </Text>
                     <TextInput
@@ -154,19 +155,6 @@ const Signup = ({ navigation }: Props) => {
                         style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
                     />
                 </View>
-
-                <View style={{ marginBottom: 12 }}>
-                    <Text>Telefono</Text>
-                    <TextInput
-                        placeholder='+56912345678'
-                        placeholderTextColor={COLORS.black}
-                        value={phone}
-                        onChangeText={setPhone}
-                        keyboardType='numeric'
-                        style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
-                    />
-                </View>
-
                 <View style={{ marginBottom: 12 }}>
                     <Text>Contraseña</Text>
                     <View style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, alignItems: "center", justifyContent: "center", paddingLeft: 22 }}>
@@ -186,32 +174,58 @@ const Signup = ({ navigation }: Props) => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                
-                <Button
-                    title="Registrar"
-                    onPress={handleRegister}
-                    filled
-                    style={{
-                        marginTop: 18,
-                        marginBottom: 4,
-                    }}
-                />
+                <View style={{ marginBottom: 12 }}>
+                    <Text>Rol</Text>
                     <TouchableOpacity
-                    onPress={() => navigation.navigate('Login')}
-                    style={{
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: COLORS.lightGray,
-                        paddingVertical: 12,
-                        borderRadius: 8,
-                        marginTop: 10,
-                    }}
-                >
-                    <Text style={{ fontSize: 16, color: COLORS.black }}>ya tienes cuenta?</Text>
-                </TouchableOpacity>
+                        onPress={() => setRole('0')}
+                        style={{
+                            backgroundColor: role === 'Trabajador' ? COLORS.blue : COLORS.lightGray,
+                            paddingVertical: 12,
+                            borderRadius: 8,
+                            marginTop: 10,
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Text style={{ color: role === 'Trabajador' ? COLORS.white : COLORS.black }}>Trabajador</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setRole('1')}
+                        style={{
+                            backgroundColor: role === 'Administrador' ? COLORS.blue : COLORS.lightGray,
+                            paddingVertical: 12,
+                            borderRadius: 8,
+                            marginTop: 10,
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Text style={{ color: role === 'Administrador' ? COLORS.white : COLORS.black }}>Administrador</Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={{ marginVertical: 10 }}>
+                    <TouchableOpacity onPress={handleDateOfBirthPress}>
+                        <Text>{birthday ? birthday.toLocaleDateString('en-US') : 'Seleccionar fecha de nacimiento'}</Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                        <DateTimePicker
+                            value={birthday || new Date()}
+                            mode="date"
+                            display="default"
+                            onChange={handleDateChange}
+                        />
+                    )}
+                </View>
+                <Button
+                    title='Registrarse'
+                    color={'blue'}
+                    onPress={handleRegister}
+                />
+                <View style={{ alignItems: 'center', marginTop: 20 }}>
+                    <Text style={{ color: messageColor }}>{message}</Text>
+                </View>
             </View>
         </SafeAreaView>
     );
 };
 
 export default Signup;
+

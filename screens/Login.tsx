@@ -1,52 +1,81 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import COLORS from '../constants/colors';
 import Button from '../components/Button';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+
 
 const Login = ({ navigation }: { navigation: any }) => {
     const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [message, setMessage] = useState<string>();
+    const [messageColor, setMessageColor] = useState<'red' | 'green' | 'black'>('black');
 
     const validateEmail = (text: string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(text);
     };
 
-    const handleLogin = () => {
-        if (!validateEmail(email)) {
-            Alert.alert('Error', 'Ingrese un correo electrónico válido');
-            return;
-        }
-        
-        // Aquí iría la lógica para validar la contraseña
-        // Por ahora, solo mostraremos un mensaje de error si la contraseña es vacía
-        if (!password) {
-            Alert.alert('Error', 'Ingrese una contraseña');
+    const handleLogin = async () => {
+        if (email == '' || password == '') {
+            Alert.alert('Error', 'Por favor, complete todos los campos');
             return;
         }
 
-        // Aquí iría la lógica para verificar si el usuario existe y si la contraseña es correcta
-        // Por ahora, mostraremos un mensaje de error genérico
-        Alert.alert('Error', 'Usuario no registrado o contraseña incorrecta');
-    };
+        setLoading(true);
+
+        try {
+            const loginFetch = await fetch('http://10.115.75.137:3000/auth/login', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                })
+            });
+
+            if (loginFetch.status == 201) {
+                const data = await loginFetch.json();
+                setMessageColor('green');
+                await AsyncStorage.setItem('token', data.token);
+                setMessage('¡Inicio de sesión exitoso!');
+                navigation.navigate('Home'); // Reemplaza 'Home' con el nombre de tu pantalla de inicio
+            } else {
+                const data = await loginFetch.json();
+                setMessageColor('red');
+                setMessage(data.message);
+            }
+        } catch (error) {
+            console.error('Error al realizar el inicio de sesión:', error);
+            Alert.alert('Error', 'Ocurrió un error al iniciar sesión. Por favor, intenta de nuevo más tarde');
+        }
+
+        setLoading(false);
+    }
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
             <View style={{ flex: 1, marginHorizontal: 22, justifyContent: 'center' }}>
                 <View style={{ marginVertical: 22 }}>
                     <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12, color: COLORS.black }}>
-                        Bienvenido ! 👋
+                        ¡Bienvenido! 👋
                     </Text>
-                    <Text style={{ fontSize: 16, color: COLORS.black }}>Ingresa tu correo y contraseña para marcar hora</Text>
+                    <Text style={{ fontSize: 16, color: COLORS.black }}>Ingresa tu correo y contraseña para iniciar sesión</Text>
                 </View>
 
                 <View style={{ marginBottom: 12 }}>
                     <Text style={{ fontSize: 16, fontWeight: '400', marginVertical: 8 }}>Correo</Text>
                     <TextInput
-                        placeholder='Ingresa tu Email'
+                        placeholder='Ingresa tu correo'
                         placeholderTextColor={COLORS.black}
                         keyboardType='email-address'
                         value={email}
@@ -61,7 +90,7 @@ const Login = ({ navigation }: { navigation: any }) => {
                         <TextInput
                             placeholder='Ingresa tu contraseña'
                             placeholderTextColor={COLORS.black}
-                            secureTextEntry={isPasswordShown}
+                            secureTextEntry={!isPasswordShown}
                             value={password}
                             onChangeText={setPassword}
                             style={{ width: '85%' }}
@@ -76,7 +105,7 @@ const Login = ({ navigation }: { navigation: any }) => {
                 </View>
 
                 <Button
-                    title="Login"
+                    title="Iniciar sesión"
                     filled
                     onPress={handleLogin}
                     style={{ marginTop: 18, marginBottom: 4 }}
@@ -109,6 +138,9 @@ const Login = ({ navigation }: { navigation: any }) => {
                 >
                     <Text style={{ fontSize: 16, color: COLORS.black }}>Regístrate</Text>
                 </TouchableOpacity>
+
+                {loading && <ActivityIndicator color={COLORS.blue} />}
+                {message && <Text style={{ color: messageColor }}>{message}</Text>}
             </View>
         </SafeAreaView>
     );

@@ -1,17 +1,18 @@
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import { Login, Signup, ForgotPassword } from "./screens";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Login from './screens/Login'; // Asegúrate de importar la pantalla de Login correctamente
+import Signup from './screens/Signup'; // Asegúrate de importar la pantalla de Signup correctamente
+import ForgotPassword from './screens/ForgotPassword'; // Asegúrate de importar la pantalla de ForgotPassword correctamente
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  
   return (
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName='Login'
       >
-        
         <Stack.Screen
           name="Login"
           component={Login}
@@ -26,15 +27,14 @@ export default function App() {
             headerShown: false
           }}
         />
-      
-      <Stack.Screen
+        <Stack.Screen
           name="ForgotPassword"
           component={ForgotPassword}
           options={{
             headerShown: false
           }}
         />
-        </Stack.Navigator>
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

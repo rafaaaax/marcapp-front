@@ -6,29 +6,53 @@ import Button from '../components/Button';
 
 const ForgotPassword = ({ navigation }: { navigation: any }) => {
     const [email, setEmail] = useState<string>('');
-    
+    const [loading, setLoading] = useState<boolean>(false);
+
     const validateEmail = (text: string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(text) && text.trim().length > 0;
     };
 
-    const handleResetPassword = () => {
+    const handleResetPassword = async () => {
         if (!validateEmail(email)) {
             Alert.alert('Error', 'Ingrese un correo electrónico válido');
             return;
         }
+        setLoading(true);
         
-        Alert.alert('Cambiar contraseña', `Se ha enviado un correo de restablecimiento de contraseña a ${email}`);
+        try {
+            const ForgotPasswordFetch = await fetch('http://10.115.75.137:3000/user/reset-password', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                })
+            });
+
+            if (ForgotPasswordFetch.status == 200) {
+                Alert.alert('Cambiar contraseña', `Se ha enviado un correo de restablecimiento de contraseña a ${email}`);
+            } else {
+                const data = await ForgotPasswordFetch.json();
+                Alert.alert('Error', data.message);
+            }
+        } catch (error) {
+            console.error('Error al realizar el restablecimiento de contraseña:', error);
+            Alert.alert('Error', 'Ocurrió un error al restablecer la contraseña. Por favor, intenta de nuevo más tarde');
+        }
+
+        setLoading(false);
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.green}}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
             <View style={{ flex: 1, marginHorizontal: 22, justifyContent: 'center' }}>
                 <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12, color: COLORS.black }}>
                     Recupera tu cuenta
                 </Text>
                 <Text style={{ fontSize: 16, color: COLORS.black }}>
-                    Porfavor Ingresa tu email para enviar un codigo.
+                    Por favor ingresa tu email para enviar un código.
                 </Text>
                 <View style={{ marginTop: 20 }}>
                     <Text>Correo</Text>
@@ -50,7 +74,7 @@ const ForgotPassword = ({ navigation }: { navigation: any }) => {
                         marginBottom: 4,
                     }}
                 />
-               <TouchableOpacity
+                <TouchableOpacity
                     onPress={() => navigation.navigate('Login')}
                     style={{
                         alignItems: 'center',
