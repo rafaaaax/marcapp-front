@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import COLORS from '../constants/colors';
-import Button from '../components/Button';
+import COLORS from '../../constants/colors';
+import Button from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { validateEmail, validateName, validatePassword } from '../../utils/validation';
+import styles from '../../assets/styles/SignUpStyles';
 
 interface Props {
     navigation: any;
@@ -23,24 +25,9 @@ const Signup = ({ navigation }: Props) => {
     const [messageColor, setMessageColor] = useState('black');
     const [showDatePicker, setShowDatePicker] = useState(false);
 
-    const validateName = (text: string) => {
-        const regex = /^[a-zA-Z\s]*$/;
-        return regex.test(text) && text.trim().length > 0;
-    };
-
-    const validateEmail = (text: string) => {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return regex.test(text) && text.trim().length > 0;
-    };
-
-    const validatePassword = (text: string) => {
-        return text.trim().length >= 6;
-    };
-
     const handleDateOfBirthPress = () => {
         setShowDatePicker(true);
     };
-
     const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) {
@@ -53,7 +40,7 @@ const Signup = ({ navigation }: Props) => {
             setBirthday(newBirthday);
         }
     };
-
+    console.log(role)
     const handleRegister = async () => {
         if (!validateName(name)) {
             Alert.alert('Error', 'Ingrese un nombre válido');
@@ -78,12 +65,18 @@ const Signup = ({ navigation }: Props) => {
         if (!birthday) {
             Alert.alert('Error', 'Seleccione su fecha de nacimiento');
             return;
-        }
-
+        }  // Verificar qué valor tiene role antes de asignar isAdminValue
+        // console.log('Role seleccionado:', role);
+    
+        // // Mapear el valor de role a 0 o 1 según corresponda
+        // const isAdminValue = role === 'Administrador' ? 1 : 0;
+        // console.log('isAdminValue:', isAdminValue); // Verificar qué valor se está enviando
         setLoading(true);
-
+      
+    
         try {
-            const registerReq = await fetch(`http://10.115.75.137:3000/user`, {
+
+            const registerReq = await fetch(`http://10.115.75.137:3000/user/create`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json"
@@ -97,67 +90,71 @@ const Signup = ({ navigation }: Props) => {
                     isAdmin: role,
                 })
             });
-
-            if (registerReq.status === 201) {
-                setMessage('');
+    
+             if (registerReq.status === 201) {
                 navigation.navigate('Login');
             } else {
                 const data = await registerReq.json();
-                setMessageColor('red');
-                setMessage(data.message);
+                if (registerReq.status === 409) {
+                    Alert.alert('Error', 'El correo electrónico ya está registrado');
+                } else {
+                    setMessageColor('red');
+                    setMessage(data.message);
+                }
             }
         } catch (error) {
+            console.log("2")
             console.error('Error:', error);
             setMessageColor('red');
             setMessage('Error de servidor');
         } finally {
             setLoading(false);
         }
-    };
+    };   
+                       
 
+  
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
-            <View style={{ flex: 1, marginHorizontal: 22 }}>
+        <SafeAreaView style={styles.container}>
+            <View style={{ flex: 1 }}>
                 <View style={{ marginVertical: 22 }}>
-                    <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 12, color: COLORS.black }}>
-                        Crear Cuenta!
-                    </Text>
-                    <Text style={{ fontSize: 16, color: COLORS.black }}>Ingresa tus datos personales</Text>
+                    <Text style={styles.sectionTitle}>Crear Cuenta!</Text>
+                    <Text style={styles.sectionSubtitle}>Ingresa tus datos personales</Text>
                 </View>
-                <View style={{ marginBottom: 12 }}>
+                <View style={styles.inputContainer}>
                     <Text>Nombre</Text>
                     <TextInput
                         placeholder='Ingresa tu nombre'
                         placeholderTextColor={COLORS.black}
                         value={name}
                         onChangeText={setName}
-                        style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
+                        style={styles.input}
                     />
                 </View>
-                <View style={{ marginBottom: 12 }}>
+                <View style={styles.inputContainer}>
                     <Text>Apellido</Text>
                     <TextInput
                         placeholder='Ingresa tu apellido'
                         placeholderTextColor={COLORS.black}
                         value={lastName}
                         onChangeText={setLastName}
-                        style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
+                        style={styles.input}
                     />
                 </View>
-                <View style={{ marginBottom: 12 }}>
-                    <Text>Email </Text>
+                <View style={styles.inputContainer}>
+                    <Text>Email</Text>
                     <TextInput
                         placeholder='Ingresa tu correo'
                         placeholderTextColor={COLORS.black}
                         value={email}
                         onChangeText={setEmail}
                         keyboardType='email-address'
-                        style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, paddingLeft: 22 }}
+                        style={styles.input}
                     />
                 </View>
-                <View style={{ marginBottom: 12 }}>
+                <View style={styles.inputContainer}>
                     <Text>Contraseña</Text>
-                    <View style={{ width: '100%', height: 48, borderColor: COLORS.black, borderWidth: 1, borderRadius: 8, alignItems: "center", justifyContent: "center", paddingLeft: 22 }}>
+                    <View style={styles.passwordInputContainer}>
                         <TextInput
                             placeholder='Ingresa tu contraseña'
                             placeholderTextColor={COLORS.black}
@@ -168,42 +165,34 @@ const Signup = ({ navigation }: Props) => {
                         />
                         <TouchableOpacity
                             onPress={() => setIsPasswordShown(!isPasswordShown)}
-                            style={{ position: "absolute", right: 12 }}
+                            style={styles.eyeIcon}
                         >
                             <Ionicons name={isPasswordShown ? "eye-off" : "eye"} size={24} color={COLORS.black} />
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={{ marginBottom: 12 }}>
-                    <Text>Rol</Text>
+                <View style={styles.inputContainer}>
+                    <Text>Selecciona tu rol</Text>
+                    <View style={styles.roleContainer}>
                     <TouchableOpacity
-                        onPress={() => setRole('0')}
-                        style={{
-                            backgroundColor: role === 'Trabajador' ? COLORS.blue : COLORS.lightGray,
-                            paddingVertical: 12,
-                            borderRadius: 8,
-                            marginTop: 10,
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Text style={{ color: role === 'Trabajador' ? COLORS.white : COLORS.black }}>Trabajador</Text>
+                                 onPress={() => setRole('0')}
+                                 style={[styles.roleButton, { backgroundColor: role === 'Trabajador' ? COLORS.blue : COLORS.primary }]}
+                                >
+                         <Text style={{ color: COLORS.white }}>Trabajador</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={() => setRole('1')}
-                        style={{
-                            backgroundColor: role === 'Administrador' ? COLORS.blue : COLORS.lightGray,
-                            paddingVertical: 12,
-                            borderRadius: 8,
-                            marginTop: 10,
-                            alignItems: 'center',
-                        }}
+                    onPress={() => setRole('1')}
+                     style={[styles.roleButton, { backgroundColor: role === 'Administrador' ? COLORS.blue : COLORS.primary }]}
                     >
-                        <Text style={{ color: role === 'Administrador' ? COLORS.white : COLORS.black }}>Administrador</Text>
+                <Text style={{ color: COLORS.white }}>Administrador</Text>
                     </TouchableOpacity>
+
+                    </View>
                 </View>
-                <View style={{ marginVertical: 10 }}>
-                    <TouchableOpacity onPress={handleDateOfBirthPress}>
-                        <Text>{birthday ? birthday.toLocaleDateString('en-US') : 'Seleccionar fecha de nacimiento'}</Text>
+                <View style={styles.dateOfBirthContainer}>
+                    <TouchableOpacity onPress={handleDateOfBirthPress} style={styles.datePickerButton}>
+                        <Text style={styles.dateOfBirthText}>Selecciona tu fecha de nacimiento</Text>
+                        <Text>{birthday ? birthday.toLocaleDateString('en-US') : 'Elegir fecha'}</Text>
                     </TouchableOpacity>
                     {showDatePicker && (
                         <DateTimePicker
@@ -215,12 +204,19 @@ const Signup = ({ navigation }: Props) => {
                     )}
                 </View>
                 <Button
-                    title='Registrarse'
-                    color={'blue'}
+                    title="Registrarse"
+                    filled
                     onPress={handleRegister}
+                    style={{ marginTop: 18, marginBottom: 4 }}
                 />
-                <View style={{ alignItems: 'center', marginTop: 20 }}>
-                    <Text style={{ color: messageColor }}>{message}</Text>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('Login')}
+                    style={styles.linkButton}
+                >
+                    <Text style={styles.linkButtonText}>Volver a login</Text>
+                </TouchableOpacity>
+                <View style={styles.messageContainer}>
+                    <Text style={[styles.messageText, { color: messageColor }]}>{message}</Text>
                 </View>
             </View>
         </SafeAreaView>
