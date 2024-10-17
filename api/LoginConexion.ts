@@ -2,9 +2,9 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://192.168.4.119:3000'; // Adjust the base URL as per your environment
+const BASE_URL = 'http://locahost:3000';
 
-export const loginUser = async (email, password) => {
+export const loginUser = async (email, password, userType) => {
     try {
         const loginFetch = await fetch(`${BASE_URL}/auth/login`, {
             method: 'POST',
@@ -14,6 +14,7 @@ export const loginUser = async (email, password) => {
             body: JSON.stringify({
                 email: email,
                 password: password,
+                userType
             })
         });
 

@@ -18,19 +18,3 @@ export const formatDate = (dateString: string): string => {
     const date = new Date(localDateString);
     return date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
-
-
-const handlePreviousWeek = () => {
-    const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
-    const previousWeek = new Date(currentWeek);
-    previousWeek.setDate(currentWeek.getDate() - 7);
-    setCurrentWeek(previousWeek);
-};
-
-const handleNextWeek = () => {
-    const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
-    const nextWeek = new Date(currentWeek);
-    console.log(nextWeek)
-    nextWeek.setDate(currentWeek.getDate() + 7);
-    setCurrentWeek(nextWeek);
-};
