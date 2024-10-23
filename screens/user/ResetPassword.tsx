@@ -6,11 +6,14 @@ import COLORS from '../../constants/colors';
 import Button from '../../components/Button';
 import { resetPassword } from '../../api/ResetPasswordConexion';
 import { styles } from '../../assets/styles/ResetPasswordStyles';
+import { serviceAxiosApi } from '../../services/serviceAxiosApi';
 
 
 const ResetPassword = ({ route, navigation }: { route: any, navigation: any }) => {
     const { email: initialEmail } = route.params ?? {};
     const [email, setEmail] = useState<string>(initialEmail ?? '');
+    const {userType : initialUser} = route.params ?? {};
+    const [userType, setUserType] = useState<string>(initialUser ?? '');
     const [code, setCode] = useState<string>('');
     const [newPassword, setNewPassword] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
@@ -26,14 +29,24 @@ const ResetPassword = ({ route, navigation }: { route: any, navigation: any }) =
             return;
         }
         setLoading(true);
-        const { success, error: errorMsg } = await resetPassword(email, code, newPassword);
-        if (success) {
-            setError('');
-            navigation.navigate('Login');
-        } else {
-            setError(errorMsg);
-        }
-        setLoading(false);
+        try {
+            const forgotFetch = await serviceAxiosApi.patch(`${userType}/initial-password-recovery${email}`);
+            if (forgotFetch) {
+              setError('');
+              console.log('Email enviado');
+              Alert.alert('Éxito', 'El correo de recuperación ha sido enviado.');
+              navigation.navigate('ResetPassword', { email: email });
+            } else {
+              setError('No se pudo enviar el correo. Intenta de nuevo.');
+              Alert.alert('Error', 'No se pudo enviar el correo. Intenta de nuevo.');
+            }
+          } catch (error) {
+            console.error('Error en la solicitud:', error);
+            setError('Error de conexión. Verifica tu red.');
+            Alert.alert('Error', 'Error de conexión. Verifica tu red.');
+          } finally {
+            setLoading(false);
+          }
     }
 
     return (

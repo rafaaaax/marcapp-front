@@ -14,7 +14,8 @@ import COLORS from "../../constants/colors";
 import Button from "../../components/Button";
 import styles from "../../assets/styles/LoginStyles";
 import { validateEmail, validatePassword } from "../../utils/validation";
-import axios from "axios";
+import { Picker } from "@react-native-picker/picker"; 
+import { serviceAxiosApi } from "../../services/serviceAxiosApi";
 
 const Login = ({ navigation }: { navigation: any }) => {
   const [isPasswordShown, setIsPasswordShown] = useState<boolean>(false);
@@ -22,10 +23,12 @@ const Login = ({ navigation }: { navigation: any }) => {
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
-  const [userType, setUserType] = useState<"parent" | "professor">("parent");
+  const [userType, setUserType] = useState<"parent" | "professor" | "student" | "admin">("parent");
 
   const handleLogin = async () => {
     console.log(email, password);
+    console.log(userType);
+
     if (email === "" || password === "") {
       Alert.alert("Error", "Por favor, complete todos los campos");
       return;
@@ -36,37 +39,37 @@ const Login = ({ navigation }: { navigation: any }) => {
       return;
     }
     if (!validatePassword(password)) {
-      Alert.alert("Error", "Contraseña invalida");
+      Alert.alert("Error", "Contraseña inválida");
       return;
     }
 
     setLoading(true);
 
     try {
-      const loginFetch = await axios.post(
-        "http://localhost:3000/auth/login",
-        {
-          email: email,
-          password: password,
-          userType: userType,
-        },
-      );
-      console.log(loginFetch);
-      console.log(loginFetch.data)
+      const loginFetch = await serviceAxiosApi.post(`auth/login`, {
+        email: email,
+        password: password,
+        userType: userType,
+      });
+      console.log(loginFetch.data);
       const access_token = loginFetch.data.accessToken;
       const refresh_token = loginFetch.data.refreshToken;
 
-
       await AsyncStorage.setItem("accessToken", access_token);
       await AsyncStorage.setItem("refreshToken", refresh_token);
+      await AsyncStorage.setItem("userType", userType);
 
-      const accessToken = await AsyncStorage.getItem("accessToken");
-      const refreshToken = await AsyncStorage.getItem("refreshToken");
+      setMessage("Inicio de sesión exitoso");
 
-      console.log("Access Token:", accessToken); // Log to verify the access token
-      console.log("Refresh Token:", refreshToken); // Log to verify the refresh token
-
-      navigation.navigate("Home");
+      if (userType === "parent") {
+        navigation.navigate("ParentHome");
+      } else if (userType === "professor") {
+        navigation.navigate("ProfessorHome");
+      } else if (userType === "student") {
+        navigation.navigate("StudentHome");
+      } else if (userType === "admin") {
+        navigation.navigate("AdminHome");
+      }
     } catch (error) {
       console.error("Error al realizar el inicio de sesión:", error);
       Alert.alert(
@@ -125,6 +128,21 @@ const Login = ({ navigation }: { navigation: any }) => {
               />
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Añadir el Picker para seleccionar el tipo de usuario */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.labelText}>Tipo de Usuario</Text>
+          <Picker
+            selectedValue={userType}
+            onValueChange={(itemValue) => setUserType(itemValue)}
+            style={{ height: 50, width: '100%' }} 
+          >
+            <Picker.Item label="Apoderado" value="parent" />
+            <Picker.Item label="Profesor" value="professor" />
+            <Picker.Item label="Estudiante" value="student" />
+            <Picker.Item label="Administración" value="admin" />
+          </Picker>
         </View>
 
         <Button

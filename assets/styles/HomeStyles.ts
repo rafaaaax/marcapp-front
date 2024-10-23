@@ -1,5 +1,4 @@
 // styles.ts
-
 import { StyleSheet } from 'react-native';
 import COLORS from '../../constants/colors';
 
@@ -23,8 +22,23 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 18,
-        marginBottom: 45,
+        marginBottom: 5, // Adjusted for better spacing
         textAlign: 'center',
+    },
+    nonEditableContainer: {
+        width: '80%', // Adjust width to fit nicely
+        marginBottom: 20, // Space between items
+    },
+    nonEditableInput: {
+        borderWidth: 1,
+        borderColor: COLORS.lightGray, // Use a light gray color
+        borderRadius: 5,
+        padding: 10,
+        backgroundColor: COLORS.lightGray, // A light background color
+    },
+    nonEditableText: {
+        color: COLORS.black, // Text color
+        fontSize: 16, // Text size
     },
     reloadButtonContainer: {
         flex: 1,

@@ -21,7 +21,7 @@ interface User {
   userType: UserType;
 }
 
-const Home = ({ navigation }: { navigation: any }) => {
+const ParentHome = ({ navigation }: { navigation: any }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -146,4 +146,4 @@ const Home = ({ navigation }: { navigation: any }) => {
   );
 };
 
-export default Home;
+export default ParentHome;

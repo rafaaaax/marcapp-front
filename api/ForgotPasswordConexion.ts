@@ -1,25 +1,18 @@
 import { Alert } from 'react-native';
+import { serviceAxiosApi } from '../services/serviceAxiosApi';
 
 export const handleForgotPassword = async (email: string, navigation: any, setLoading: (loading: boolean) => void, setError: (error: string) => void) => {
   try {
-    const forgotFetch = await fetch('http://localhost:3000/user/request-reset-password', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email: email,
-      })
+    const forgotFetch = await serviceAxiosApi.post(`mail/send`, {
+      to: email,
+      subject: 'Recuperación de contraseña',
+      text: 'Recuperación de contraseña',
+      html: `<p>Hola, has solicitado recuperar tu contraseña. Haz clic en el siguiente enlace para restablecerla: <a href="http://localhost:3000/reset-password?email=${email}">Recuperar contraseña</a></p>`  
     });
 
-    if (forgotFetch.ok) {
+    if (forgotFetch.status === 200) {
       setError('');
       navigation.navigate('ResetPassword', { email: email });
-    } else if (forgotFetch.status === 500) {
-      Alert.alert('Usuario no registrado');
-    } else {
-      const response = await forgotFetch.json();
-      setError(response.error);
     }
   } catch (error) {
     setError('Error de conexión');
