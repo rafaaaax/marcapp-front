@@ -85,7 +85,7 @@ const Home = ({ navigation }: { navigation: any }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.reloadButtonContainer}>
         <TouchableOpacity onPress={handleReload}>
-          <Text style={styles.reloadButton}>Recargar</Text>
+          <Text style={styles.editButton}>Recargar</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.profileContainer}>
@@ -135,7 +135,7 @@ const Home = ({ navigation }: { navigation: any }) => {
 
         <TouchableOpacity
           onPress={handleLogout}
-          style={styles.logoutButton}
+          style={styles.editButton}
         >
           <Text style={{ fontSize: 16, color: COLORS.primary }}>
             Cerrar Sesión

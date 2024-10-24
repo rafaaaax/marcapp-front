@@ -46,26 +46,16 @@ const styles = StyleSheet.create({
         marginRight: 20,
         marginTop: 20,
     },
-    reloadButton: {
-        fontSize: 16,
-        color: COLORS.primary,
-    },
     editButton: {
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: COLORS.primary,
-        paddingVertical: 12,
-        borderRadius: 8,
-        marginTop: 10,
-    },
-    logoutButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: COLORS.lightGray,
-        paddingVertical: 12,
-        borderRadius: 8,
-        marginTop: 10,
-    },
+        width: '100%',       // Asegura que el botón ocupe todo el ancho del contenedor padre
+        paddingVertical: 20,  // Asegura que la altura sea consistente (ajusta si es necesario)
+        borderRadius: 15,
+        marginTop: 10,        // Ajusta el espaciado entre los botones si lo necesitas
+        height: 60,           // Establece una altura fija para que todos los botones tengan la misma altura
+      },
     registerButton: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -81,7 +71,28 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         marginTop: 30,
-    },
+    },buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around', // Espaciado entre los botones
+        marginTop: 'auto', // Mueve los botones al final del contenedor
+        padding: 100, // Espaciado interno
+      },
+      simpleButton: {
+        padding: 10,
+        borderRadius: 5,
+      },
+      reloadButtonText: {
+        fontSize: 16,
+        color: COLORS.white,
+      },
+      verticalButtonContainer: {
+        flexDirection: "column",
+        justifyContent: "space-around", // Espaciado equitativo entre los botones
+        alignItems: "center",
+        height: "50%", // Ajusta esta altura según lo necesites
+        marginTop: 20, // Ajuste superior para separar el saludo
+        width: "70%", // Asegura que los botones ocupen todo el ancho
+      },
 });
 
 export default styles;

@@ -28,12 +28,12 @@ const Login = ({ navigation }: { navigation: any }) => {
   const handleLogin = async () => {
     console.log(email, password);
     console.log(userType);
-
+  
     if (email === "" || password === "") {
       Alert.alert("Error", "Por favor, complete todos los campos");
       return;
     }
-
+  
     if (!validateEmail(email)) {
       Alert.alert("Error", "Por favor, ingrese un correo electrónico válido");
       return;
@@ -42,25 +42,30 @@ const Login = ({ navigation }: { navigation: any }) => {
       Alert.alert("Error", "Contraseña inválida");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
+      // If the user selects "admin", authenticate them as "professor"
+      const loginUserType = userType === "admin" ? "professor" : userType;
+  
       const loginFetch = await serviceAxiosApi.post(`auth/login`, {
         email: email,
         password: password,
-        userType: userType,
+        userType: loginUserType, // Send professor type for login when admin is selected
       });
+  
       console.log(loginFetch.data);
       const access_token = loginFetch.data.accessToken;
       const refresh_token = loginFetch.data.refreshToken;
-
+  
       await AsyncStorage.setItem("accessToken", access_token);
       await AsyncStorage.setItem("refreshToken", refresh_token);
-      await AsyncStorage.setItem("userType", userType);
-
+      await AsyncStorage.setItem("userType", loginUserType); // Save original user type
+  
       setMessage("Inicio de sesión exitoso");
-
+  
+      // Navigate based on user type
       if (userType === "parent") {
         navigation.navigate("ParentHome");
       } else if (userType === "professor") {
@@ -68,6 +73,7 @@ const Login = ({ navigation }: { navigation: any }) => {
       } else if (userType === "student") {
         navigation.navigate("StudentHome");
       } else if (userType === "admin") {
+        // If the user selected admin, navigate to AdminHome
         navigation.navigate("AdminHome");
       }
     } catch (error) {

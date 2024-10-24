@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
-import axios from "axios";
+import { View, Text, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import COLORS from "../../constants/colors";
@@ -37,7 +36,6 @@ const ParentHome = ({ navigation }: { navigation: any }) => {
     }
 
     try {
-      // Modificar la URL para incluir el token de acceso
       const response = await serviceAxiosApi.get(`parent/${access_Token}`);
       setUser(response.data);
     } catch (error) {
@@ -69,6 +67,10 @@ const ParentHome = ({ navigation }: { navigation: any }) => {
     fetchProfile();
   };
 
+  const handleAccountingAlert = () => {
+    Alert.alert("Próximamente. en desarrollo", "Esta funcionalidad estará disponible pronto.");
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" color={COLORS.primary} />;
   }
@@ -83,63 +85,34 @@ const ParentHome = ({ navigation }: { navigation: any }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.reloadButtonContainer}>
-        <TouchableOpacity onPress={handleReload}>
-          <Text style={styles.reloadButton}>Recargar</Text>
+      {/* Saludo en la parte superior */}
+      <Text style={styles.title}>{user?.name ? `Hola ${user.name} !` : "Mi perfil!"}</Text>
+      
+      {/* Contenedor para los botones adicionales */}
+      <View style={styles.verticalButtonContainer}>
+        {/* Botón Contabilidad */}
+        <TouchableOpacity onPress={handleAccountingAlert} style={styles.editButton}>
+          <Text style={{ fontSize: 16, color: COLORS.white }}>Contabilidad</Text>
+        </TouchableOpacity>
+
+        {/* Botón Calificaciones Pupilo */}
+        <TouchableOpacity onPress={() => navigation.navigate("Grades")} style={styles.editButton}>
+          <Text style={{ fontSize: 16, color: COLORS.white }}>Calificaciones Pupilo(s)</Text>
+        </TouchableOpacity>
+
+        {/* Botón Asistencia */}
+        <TouchableOpacity onPress={() => navigation.navigate("ParentAttendance")} style={styles.editButton}>
+          <Text style={{ fontSize: 16, color: COLORS.white }}>Asistencia Pupilo(s)</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.profileContainer}>
-        <Text style={styles.title}>{user?.name ? `Hola  ${user.name} !` : "Mi perfil!"}</Text>
 
-        {/* Non-editable text boxes for name and email */}
-        <View style={styles.nonEditableContainer}>
-          <Text style={styles.label}>Nombre:</Text>
-          <View style={styles.nonEditableInput}>
-            <Text style={styles.nonEditableText}>{user?.name}</Text>
-          </View>
-        </View>
-
-        <View style={styles.nonEditableContainer}>
-          <Text style={styles.label}>Email:</Text>
-          <View style={styles.nonEditableInput}>
-            <Text style={styles.nonEditableText}>{user?.email}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("ProfileEdit", { user })}
-          style={styles.editButton}
-        >
-          <Text style={{ fontSize: 16, color: COLORS.white }}>
-            Editar Datos
-          </Text>
+      {/* Contenedor para los botones en la parte inferior */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={handleReload} style={styles.simpleButton}>
+          <Text style={{ fontSize: 16, color: COLORS.primary }}>Recargar</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("RegisterTime")}
-          style={styles.registerButton}
-        >
-          <Text style={{ fontSize: 16, color: COLORS.white }}>
-            Registrar Hora
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate("Resumen")}
-          style={styles.summaryButton}
-        >
-          <Text style={{ fontSize: 16, color: COLORS.primary }}>
-            Resumen
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={styles.logoutButton}
-        >
-          <Text style={{ fontSize: 16, color: COLORS.primary }}>
-            Cerrar Sesión
-          </Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.simpleButton}>
+          <Text style={{ fontSize: 16, color: COLORS.primary }}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

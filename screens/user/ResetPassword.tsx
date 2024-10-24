@@ -10,10 +10,8 @@ import { serviceAxiosApi } from '../../services/serviceAxiosApi';
 
 
 const ResetPassword = ({ route, navigation }: { route: any, navigation: any }) => {
-    const { email: initialEmail } = route.params ?? {};
+    const { email: initialEmail , userType} = route.params ?? {};
     const [email, setEmail] = useState<string>(initialEmail ?? '');
-    const {userType : initialUser} = route.params ?? {};
-    const [userType, setUserType] = useState<string>(initialUser ?? '');
     const [code, setCode] = useState<string>('');
     const [newPassword, setNewPassword] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
@@ -30,21 +28,35 @@ const ResetPassword = ({ route, navigation }: { route: any, navigation: any }) =
         }
         setLoading(true);
         try {
-            const forgotFetch = await serviceAxiosApi.patch(`${userType}/initial-password-recovery${email}`);
+            const forgotFetch = await serviceAxiosApi.patch(`${userType}/reset-password-recovery/${email}`,{
+                code: code,
+                newPassword: newPassword
+            });
             if (forgotFetch) {
               setError('');
               console.log('Email enviado');
-              Alert.alert('Éxito', 'El correo de recuperación ha sido enviado.');
-              navigation.navigate('ResetPassword', { email: email });
+              Alert.alert('Éxito', 'La clave ha sido restablecida.');
+              navigation.navigate('Login');
             } else {
               setError('No se pudo enviar el correo. Intenta de nuevo.');
-              Alert.alert('Error', 'No se pudo enviar el correo. Intenta de nuevo.');
+              Alert.alert('Error', 'Codigo de verificacion incorrecto. Intenta de nuevo.');
             }
-          } catch (error) {
+        } catch (error: any) {
             console.error('Error en la solicitud:', error);
-            setError('Error de conexión. Verifica tu red.');
-            Alert.alert('Error', 'Error de conexión. Verifica tu red.');
-          } finally {
+    
+            if (error.response && error.response.data && error.response.data.message) {
+                const errorMessage = error.response.data.message;
+    
+                if (errorMessage.includes('invalid') || errorMessage.includes('expired')) {
+                    Alert.alert('Error', 'Código de verificación inválido o expirado. Inténtalo de nuevo.');
+                } else {
+                    Alert.alert('Error', errorMessage);
+                }
+            } else {
+                Alert.alert('Error', 'Error de conexión. Verifica tu red.');
+            }
+            setError('Código de verificación incorrecto o expirado. Intenta de nuevo.');
+        } finally {
             setLoading(false);
           }
     }
